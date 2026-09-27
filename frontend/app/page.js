@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import AudioRecorder from '@/components/AudioRecorder';
 import { CheckCircle2, XCircle, Sparkles, PlusCircle, Loader2 } from 'lucide-react';
-import { GoogleGenAI, Type } from '@google/genai';
 
 export default function Dashboard() {
   const [habits, setHabits] = useState([
@@ -16,11 +15,16 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [logs, setLogs] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState('');
 
   const addHabit = (e) => {
     e.preventDefault();
-    if (!newHabit.trim()) return;
-    setHabits([...habits, { id: Date.now(), name: newHabit, completed: false }]);
+    const name = newHabit.trim();
+    if (!name) return;
+    setHabits((currentHabits) => [
+      ...currentHabits,
+      { id: Date.now(), name, completed: false },
+    ]);
     setNewHabit('');
   };
 
@@ -28,63 +32,31 @@ export default function Dashboard() {
     const updatedLogs = [...logs, newTranscript];
     setLogs(updatedLogs);
     setAnalyzing(true);
+    setAnalysisError('');
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
       const habitNames = habits.map((h) => h.name);
-
-      const prompt = `
-        You are an intelligent wellness & daily habit tracker AI.
-        
-        Target Daily Habits: ${JSON.stringify(habitNames)}
-        
-        All Audio Logs Recorded Today:
-        ${updatedLogs.map((log, idx) => `${idx + 1}. "${log}"`).join('\n')}
-        
-        Tasks:
-        1. Understand the full contextual meaning of the audio logs.
-        2. Evaluate which target habits were actually completed or explicitly performed according to the logs.
-        3. Write an encouraging, reflective daily summary synthesizeing the overall progress, tone, and efforts described across all logs today.
-      `;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              completedHabits: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: 'List of habit names from target habits that were completed in the logs.',
-              },
-              cumulativeSummary: {
-                type: Type.STRING,
-                description: 'A thoughtful 2-3 sentence AI summary synthesizing the day based on all logs so far.',
-              },
-            },
-            required: ['completedHabits', 'cumulativeSummary'],
-          },
-        },
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ habits: habitNames, logs: updatedLogs }),
       });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Could not analyze this check-in.');
+      }
 
-      const result = JSON.parse(response.text);
-
-      // Update habit states based on semantic contextual analysis
-      const updatedHabits = habits.map((h) => ({
-        ...h,
-        completed: result.completedHabits.includes(h.name),
-      }));
-
-      setHabits(updatedHabits);
+      const completedNames = new Set(result.completedHabits);
+      setHabits((currentHabits) => currentHabits.map((habit) => ({
+        ...habit,
+        completed: completedNames.has(habit.name),
+      })));
       setSummary({
         text: result.cumulativeSummary,
-        completedCount: result.completedHabits.length,
+        completedCount: habits.filter((habit) => completedNames.has(habit.name)).length,
       });
     } catch (err) {
-      console.error("AI Analysis Error:", err);
+      setAnalysisError(err.message || 'Could not analyze this check-in.');
     } finally {
       setAnalyzing(false);
     }
@@ -112,11 +84,19 @@ export default function Dashboard() {
               <input
                 type="text"
                 placeholder="Add a new habit..."
+                aria-label="New habit"
+                maxLength={80}
                 value={newHabit}
                 onChange={(e) => setNewHabit(e.target.value)}
                 className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white w-full focus:outline-none focus:border-indigo-500"
               />
-              <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 p-2 rounded-lg text-white">
+              <button
+                type="submit"
+                aria-label="Add habit"
+                title="Add habit"
+                disabled={!newHabit.trim()}
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 p-2 rounded-lg text-white"
+              >
                 <PlusCircle size={20} />
               </button>
             </form>
@@ -151,6 +131,11 @@ export default function Dashboard() {
             <h2 className="text-xl font-bold mb-3 flex items-center gap-2 text-indigo-300">
               <Sparkles className="text-indigo-400" /> Daily AI Summary
             </h2>
+            {analysisError && (
+              <p role="alert" className="mb-3 text-sm text-rose-300">
+                {analysisError}
+              </p>
+            )}
             {analyzing ? (
               <div className="flex items-center gap-2 text-indigo-400 text-sm py-4">
                 <Loader2 size={18} className="animate-spin" /> Synthesizing cumulative logs with Gemini...
@@ -170,14 +155,14 @@ export default function Dashboard() {
           </div>
 
           <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
-            <h2 className="text-xl font-bold mb-4 text-white">Today's Audio Transcripts</h2>
+            <h2 className="text-xl font-bold mb-4 text-white">Today&apos;s Audio Transcripts</h2>
             {logs.length === 0 ? (
               <p className="text-slate-500 text-sm italic">No entries logged yet today.</p>
             ) : (
               <ul className="space-y-3">
                 {logs.map((log, i) => (
                   <li key={i} className="p-3 bg-slate-900 rounded-lg text-slate-300 text-xs leading-relaxed border-l-2 border-indigo-500">
-                    "{log}"
+                    &quot;{log}&quot;
                   </li>
                 ))}
               </ul>
