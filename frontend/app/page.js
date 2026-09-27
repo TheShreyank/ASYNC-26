@@ -6,9 +6,10 @@ import { GoogleGenAI, Type } from '@google/genai';
 
 export default function Dashboard() {
   const [habits, setHabits] = useState([
-    { id: 1, name: 'Drink 2L Water', completed: false },
-    { id: 2, name: '30 mins Coding', completed: false },
-    { id: 3, name: 'Evening Walk', completed: false },
+    { id: 1, name: 'Wake up at 6 a.m.', completed: false },
+    { id: 2, name: 'Finish 10k steps', completed: false },
+    { id: 3, name: 'Go to the gym.', completed: false },
+    { id: 4, name: 'Sleep at 10 p.m.', completed: false },
   ]);
 
   const [newHabit, setNewHabit] = useState('');

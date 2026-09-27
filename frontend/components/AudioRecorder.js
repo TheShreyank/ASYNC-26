@@ -57,7 +57,7 @@ export default function AudioRecorder({ onTranscriptReceived }) {
   };
 
   const handleUpload = async () => {
-    if (!audioBlob) return;git remote set-url origin https://github.com/TheShreyank/ASYNC-26.git
+    if (!audioBlob) return;
 
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) {
