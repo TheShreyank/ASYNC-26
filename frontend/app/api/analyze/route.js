@@ -42,7 +42,18 @@ Identify only habits that the transcripts clearly describe as completed. Do not 
   `.trim();
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        retryOptions: {
+          attempts: 7,
+          initialDelay: 0.5,
+          maxDelay: 2,
+          expBase: 2,
+          jitter: 0.2,
+        },
+      },
+    });
     const response = await ai.models.generateContent({
       model: "gemini-3.6-flash",
       contents: prompt,
