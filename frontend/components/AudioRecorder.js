@@ -1,12 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Mic, Square, Check } from "lucide-react";
+
+const BARS = Array.from({ length: 22 }, (_, i) => i);
+
+function formatTime(total) {
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+}
 
 export default function AudioRecorder({ onTranscriptReceived }) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [seconds, setSeconds] = useState(0);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const audioPreviewRef = useRef(null);
@@ -29,6 +37,13 @@ export default function AudioRecorder({ onTranscriptReceived }) {
     if (recorder?.state === "recording") recorder.stop();
     recorder?.stream.getTracks().forEach((track) => track.stop());
   }, []);
+
+  // Recording timer
+  useEffect(() => {
+    if (!isRecording) return;
+    const timer = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, [isRecording]);
 
   const startRecording = async () => {
     audioChunksRef.current = [];
@@ -56,6 +71,7 @@ export default function AudioRecorder({ onTranscriptReceived }) {
       recorder.start();
       setAudioBlob(null);
       setError("");
+      setSeconds(0);
       setIsRecording(true);
     } catch (err) {
       console.error("Microphone access denied or not supported:", err);
@@ -119,41 +135,62 @@ export default function AudioRecorder({ onTranscriptReceived }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 border rounded-xl bg-slate-900 text-white border-slate-800">
-      <div className="flex gap-3">
-        {!isRecording ? (
-          <button
-            type="button"
-            onClick={startRecording}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition"
-          >
-            Start Recording
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={stopRecording}
-            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium animate-pulse"
-          >
-            Stop Recording
-          </button>
-        )}
-      </div>
-
-      {audioBlob && (
-        <div className="flex flex-col items-center gap-2 mt-2">
-          <audio ref={audioPreviewRef} controls className="h-10" aria-label="Recording preview" />
-          <button
-            type="button"
-            onClick={handleUpload}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-900 text-white rounded-lg font-medium transition"
-          >
-            {loading ? "Transcribing Audio..." : "Transcribe & Save Log"}
-          </button>
-        </div>
+    <div className="recorder" aria-live="polite">
+      {isRecording ? (
+        <>
+          <div className="live">
+            <span className="dot" aria-hidden="true" />
+            <span className="timer">{formatTime(seconds)}</span>
+            <div className="wave" aria-hidden="true">
+              {BARS.map((i) => (
+                <i key={i} style={{ "--i": i }} />
+              ))}
+            </div>
+            <button type="button" onClick={stopRecording} className="btn btn-stop">
+              <Square fill="currentColor" /> Stop
+            </button>
+          </div>
+          <p className="hint">Listening. Tap stop when you&apos;re done.</p>
+        </>
+      ) : audioBlob ? (
+        <>
+          <div className="rec-row">
+            <audio ref={audioPreviewRef} controls className="audio-preview" aria-label="Recording preview" />
+          </div>
+          <div className="rec-row" style={{ marginTop: 14 }}>
+            <button type="button" onClick={handleUpload} disabled={loading} className="btn btn-hero">
+              {loading ? (
+                <>
+                  <span className="spin" aria-hidden="true" /> Transcribing&hellip;
+                </>
+              ) : (
+                <>
+                  <Check strokeWidth={3} /> Save check-in
+                </>
+              )}
+            </button>
+            {!loading && (
+              <button type="button" onClick={() => setAudioBlob(null)} className="btn btn-ghost">
+                Record again
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="rec-row">
+            <button type="button" onClick={startRecording} className="btn btn-hero btn-mic">
+              <Mic /> Start check-in
+            </button>
+          </div>
+          <p className="hint">Takes about a minute. Just say what you did today.</p>
+        </>
       )}
-      {error && <p role="alert" className="text-center text-sm text-rose-300">{error}</p>}
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

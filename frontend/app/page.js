@@ -1,13 +1,20 @@
 'use client';
 import { useState } from 'react';
+import Image from 'next/image';
 import AudioRecorder from '@/components/AudioRecorder';
-import { CheckCircle2, XCircle, Sparkles, PlusCircle, Loader2 } from 'lucide-react';
+import { Check, Plus, Sparkles, Sun, Moon } from 'lucide-react';
+
+const RING_RADIUS = 86;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+
+const LEAF_PATH =
+  'M88 6C50 8 18 30 14 66c-1 9 1 18 6 26 2-14 8-27 20-38 10-9 22-14 36-16-16 6-28 16-36 32 34 6 58-14 62-48 1-8 0-14-2-16-4-1-8 0-12 0z';
 
 export default function Dashboard() {
   const [habits, setHabits] = useState([
     { id: 1, name: 'Wake up at 6 a.m.', completed: false },
     { id: 2, name: 'Finish 10k steps', completed: false },
-    { id: 3, name: 'Go to the gym.', completed: false },
+    { id: 3, name: 'Go to the gym', completed: false },
     { id: 4, name: 'Sleep at 10 p.m.', completed: false },
   ]);
 
@@ -16,6 +23,18 @@ export default function Dashboard() {
   const [logs, setLogs] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
+
+  const completedCount = habits.filter((habit) => habit.completed).length;
+  const ringOffset = RING_LENGTH * (1 - completedCount / (habits.length || 1));
+
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    let current = root.getAttribute('data-theme');
+    if (!current) {
+      current = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    root.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  };
 
   const addHabit = (e) => {
     e.preventDefault();
@@ -29,7 +48,7 @@ export default function Dashboard() {
   };
 
   const handleTranscript = async (newTranscript) => {
-    const updatedLogs = [...logs, newTranscript];
+    const updatedLogs = [...logs, { text: newTranscript, time: new Date() }];
     setLogs(updatedLogs);
     setAnalyzing(true);
     setAnalysisError('');
@@ -39,7 +58,7 @@ export default function Dashboard() {
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ habits: habitNames, logs: updatedLogs }),
+        body: JSON.stringify({ habits: habitNames, logs: updatedLogs.map((l) => l.text) }),
       });
       const result = await response.json();
       if (!response.ok) {
@@ -51,10 +70,7 @@ export default function Dashboard() {
         ...habit,
         completed: completedNames.has(habit.name),
       })));
-      setSummary({
-        text: result.cumulativeSummary,
-        completedCount: habits.filter((habit) => completedNames.has(habit.name)).length,
-      });
+      setSummary({ text: result.cumulativeSummary });
     } catch (err) {
       setAnalysisError(err.message || 'Could not analyze this check-in.');
     } finally {
@@ -63,113 +79,184 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-900 text-slate-100 p-8 font-sans">
-      <header className="max-w-5xl mx-auto mb-10 flex justify-between items-center border-b border-slate-800 pb-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-white">Junction Junkers</h1>
-          <p className="text-slate-400 text-sm">ASYNC 2026 — Wellness & Lifestyle Track</p>
+    <div className="wrap">
+      {/* Top bar */}
+      <header className="top">
+        <div className="brand">
+          <Image src="/casualhealth-minilogo.png" alt="CasualHealth mini logo" width={75} height={75} priority />
+          <span className="wordmark">
+            <span className="a">Casual</span>
+            <span className="b">Health</span>
+          </span>
         </div>
-        <span className="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1.5 rounded-full border border-indigo-500/20">
-          MVP Prototype
-        </span>
+        <div className="top-actions">
+          <span className="pill">Beta</span>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={toggleTheme}
+            aria-label="Switch light or dark theme"
+          >
+            <Sun className="sun" />
+            <Moon className="moon" />
+          </button>
+        </div>
       </header>
 
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column */}
-        <div className="space-y-6">
-          <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
-            <h2 className="text-xl font-bold mb-4 text-white">Daily Target Habits</h2>
-            
-            <form onSubmit={addHabit} className="flex gap-2 mb-4">
-              <input
-                type="text"
-                placeholder="Add a new habit..."
-                aria-label="New habit"
-                maxLength={80}
-                value={newHabit}
-                onChange={(e) => setNewHabit(e.target.value)}
-                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white w-full focus:outline-none focus:border-indigo-500"
-              />
-              <button
-                type="submit"
-                aria-label="Add habit"
-                title="Add habit"
-                disabled={!newHabit.trim()}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 p-2 rounded-lg text-white"
-              >
-                <PlusCircle size={20} />
-              </button>
-            </form>
-
-            <ul className="space-y-2">
-              {habits.map((habit) => (
-                <li
-                  key={habit.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-800"
-                >
-                  <span className="text-slate-200">{habit.name}</span>
-                  {habit.completed ? (
-                    <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
-                      <CheckCircle2 size={16} /> Done
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-xs text-slate-500">
-                      <XCircle size={16} /> Pending
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-
+      {/* Hero: check-in + progress ring */}
+      <section className="hero" aria-labelledby="hero-title">
+        <svg className="leafbg" viewBox="0 0 100 100" aria-hidden="true">
+          <path fill="currentColor" d={LEAF_PATH} />
+        </svg>
+        <div className="hero-copy">
+          <p className="date" suppressHydrationWarning>
+            {new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
+          </p>
+          <h1 id="hero-title">Small habits. Bigger you.</h1>
+          <p className="lede">
+            Talk through your day out loud. CasualHealth listens, ticks off the habits you
+            mentioned, and sums up how it went.
+          </p>
           <AudioRecorder onTranscriptReceived={handleTranscript} />
         </div>
+        <div
+          className="ring-wrap"
+          role="img"
+          aria-label={`${completedCount} of ${habits.length} habits completed`}
+        >
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <circle className="ring-track" cx="100" cy="100" r={RING_RADIUS} />
+            <circle
+              className="ring-bar"
+              cx="100"
+              cy="100"
+              r={RING_RADIUS}
+              strokeDasharray={RING_LENGTH}
+              strokeDashoffset={ringOffset}
+            />
+          </svg>
+          <div className="ring-label">
+            <b>{completedCount}/{habits.length}</b>
+            <span>habits completed</span>
+          </div>
+        </div>
+      </section>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          <div className="bg-gradient-to-br from-slate-800 to-indigo-950/40 border border-indigo-500/30 p-6 rounded-2xl shadow-xl">
-            <h2 className="text-xl font-bold mb-3 flex items-center gap-2 text-indigo-300">
-              <Sparkles className="text-indigo-400" /> Daily AI Summary
+      <div className="grid">
+        {/* Habits */}
+        <section className="card" aria-labelledby="h-habits">
+          <h2 id="h-habits">Today&apos;s habits</h2>
+          <p className="sub">
+            Add what you want to do today. Say it in your check-in and it gets ticked off.
+          </p>
+          <form className="add" onSubmit={addHabit}>
+            <input
+              type="text"
+              placeholder="Add a habit, like “Read 20 pages”"
+              aria-label="New habit"
+              maxLength={80}
+              autoComplete="off"
+              value={newHabit}
+              onChange={(e) => setNewHabit(e.target.value)}
+            />
+            <button
+              type="submit"
+              aria-label="Add habit"
+              title="Add habit"
+              disabled={!newHabit.trim()}
+            >
+              <Plus strokeWidth={2.4} />
+            </button>
+          </form>
+
+          <ul className="habits">
+            {habits.map((habit) => (
+              <li key={habit.id} className={`habit${habit.completed ? ' done' : ''}`}>
+                <span className="tick">
+                  <Check strokeWidth={3} />
+                </span>
+                <span className="name">{habit.name}</span>
+                <span className="status">{habit.completed ? 'Done' : 'Not yet'}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <div className="col">
+          {/* Summary */}
+          <section className="card summary" aria-labelledby="h-sum">
+            <h2 id="h-sum">
+              <Sparkles aria-hidden="true" /> Your day so far
             </h2>
             {analysisError && (
-              <p role="alert" className="mb-3 text-sm text-rose-300">
+              <p role="alert" className="err-text">
                 {analysisError}
               </p>
             )}
             {analyzing ? (
-              <div className="flex items-center gap-2 text-indigo-400 text-sm py-4">
-                <Loader2 size={18} className="animate-spin" /> Synthesizing cumulative logs with Gemini...
+              <div className="working" role="status">
+                <span className="spin" aria-hidden="true" /> Reading your check-in&hellip;
               </div>
             ) : summary ? (
-              <div className="space-y-3">
-                <p className="text-slate-300 leading-relaxed text-sm">{summary.text}</p>
-                <div className="inline-block bg-indigo-500/20 text-indigo-300 text-xs px-3 py-1 rounded-full font-medium">
-                  Progress: {summary.completedCount} / {habits.length} Goals Completed
-                </div>
+              <div>
+                <p className="text">{summary.text}</p>
+                <span className="chip">
+                  {completedCount} of {habits.length} habits done
+                </span>
+                <p className="note">Habits are ticked from what you say. Worth a quick check.</p>
               </div>
             ) : (
-              <p className="text-slate-500 text-sm italic">
-                Record an audio log to generate your AI daily synthesis.
-              </p>
+              <p className="empty">Record a check-in and your summary will show up here.</p>
             )}
-          </div>
+          </section>
 
-          <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
-            <h2 className="text-xl font-bold mb-4 text-white">Today&apos;s Audio Transcripts</h2>
+          {/* Transcripts */}
+          <section className="card" aria-labelledby="h-logs">
+            <h2 id="h-logs">Today&apos;s check-ins</h2>
             {logs.length === 0 ? (
-              <p className="text-slate-500 text-sm italic">No entries logged yet today.</p>
+              <p className="empty">Nothing yet. Your first check-in will appear here.</p>
             ) : (
-              <ul className="space-y-3">
+              <ul className="logs">
                 {logs.map((log, i) => (
-                  <li key={i} className="p-3 bg-slate-900 rounded-lg text-slate-300 text-xs leading-relaxed border-l-2 border-indigo-500">
-                    &quot;{log}&quot;
+                  <li key={i}>
+                    <time>
+                      {log.time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                    </time>
+                    &ldquo;{log.text}&rdquo;
                   </li>
                 ))}
               </ul>
             )}
-          </div>
+          </section>
         </div>
       </div>
-    </main>
+
+      {/* Footer */}
+      <footer className="site-foot">
+        <svg className="leafbg" viewBox="0 0 100 100" aria-hidden="true">
+          <path fill="currentColor" d={LEAF_PATH} />
+        </svg>
+        <div className="foot-inner">
+          <div className="foot-brand">
+            <Image src="/casualhealth-minilogo.png" alt="CasualHealth mini logo" width={90} height={90} />
+            <div className="foot-wordmark">
+              <span className="w1">Casual</span>
+              <span className="w2">Health</span>
+            </div>
+            <div className="foot-tagline">Small habits. Bigger you.</div>
+          </div>
+          <div className="foot-divider" aria-hidden="true" />
+          <div className="foot-text">
+            <div className="foot-by">Built by</div>
+            <p className="foot-team">
+              Junction<span>Junkers</span>
+            </p>
+            <div className="foot-rule" aria-hidden="true" />
+            <p className="foot-event">ASYNC 2026</p>
+            <p className="foot-track">Wellness and Lifestyle track</p>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
