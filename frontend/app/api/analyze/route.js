@@ -55,7 +55,7 @@ Identify only habits that the transcripts clearly describe as completed. Do not 
       },
     });
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-3.8-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -77,9 +77,12 @@ Identify only habits that the transcripts clearly describe as completed. Do not 
       },
     });
 
-    const result = JSON.parse(response.text || "{}");
+    let rawText = response.text || "{}";
+    // Strip markdown code block formatting if present
+    rawText = rawText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+    const result = JSON.parse(rawText);
     if (!Array.isArray(result.completedHabits) || typeof result.cumulativeSummary !== "string") {
-      throw new Error("Gemini returned an invalid analysis response.");
+      throw new Error("Gemini returned an invalid analysis response format.");
     }
 
     const completedSet = new Set(result.completedHabits);
@@ -87,6 +90,12 @@ Identify only habits that the transcripts clearly describe as completed. Do not 
     return Response.json({ completedHabits, cumulativeSummary: result.cumulativeSummary });
   } catch (error) {
     console.error("Habit analysis failed:", error);
-    return Response.json({ error: "Habit analysis failed. Please try again." }, { status: 502 });
+    let errorMessage = "Habit analysis failed. Please try again.";
+    if (error?.status === 429) {
+      errorMessage = "Rate limit exceeded. Please wait a moment.";
+    } else if (error?.message) {
+      errorMessage = `Analysis error: ${error.message}`;
+    }
+    return Response.json({ error: errorMessage }, { status: error?.status || 502 });
   }
 }

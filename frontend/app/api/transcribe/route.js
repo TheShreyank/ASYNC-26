@@ -34,9 +34,20 @@ export async function POST(request) {
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ 
+      apiKey,
+      httpOptions: {
+        retryOptions: {
+          attempts: 7,
+          initialDelay: 0.5,
+          maxDelay: 2,
+          expBase: 2,
+          jitter: 0.2,
+        },
+      },
+    });
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3.8-flash",
       contents: [
         {
           role: "user",
@@ -58,6 +69,16 @@ export async function POST(request) {
     return Response.json({ transcript });
   } catch (error) {
     console.error("Audio transcription failed:", error);
-    return Response.json({ error: "Audio transcription failed. Please try again." }, { status: 502 });
+    
+    // Check if it's a rate limit or a specific API error
+    let errorMessage = "Audio transcription failed. Please try again.";
+    if (error?.status === 429) {
+      errorMessage = "Rate limit exceeded. Please wait a moment before recording again.";
+    } else if (error?.message) {
+      // Pass through the API error message if available, so it's clear what went wrong
+      errorMessage = `Transcription error: ${error.message}`;
+    }
+    
+    return Response.json({ error: errorMessage }, { status: error?.status || 502 });
   }
 }
