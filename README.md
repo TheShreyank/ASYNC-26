@@ -1,68 +1,82 @@
-# ASYNC 2026 | Junction Junkers
+<div align="center">
+  <img src="frontend/public/casualhealth-minilogo.png" alt="CasualHealth Logo" width="120" />
 
-Junction Junkers is a voice-first habit tracker built for the ASYNC 2026 Wellness & Lifestyle track. It lets people define daily habits, record short reflections, and use Gemini to transcribe those reflections, identify completed habits, and summarize the day's progress.
+  <h1>CasualHealth 🌿</h1>
+  
+  <p><strong>Small habits. Bigger you.</strong></p>
 
-## What It Does
+  <p>
+    Built by <strong>JunctionJunkers</strong> for the <strong>ASYNC 2026 Wellness & Lifestyle Track</strong>
+  </p>
 
-- Start with sample daily habits or add your own.
-- Record a spoken check-in and review it before sending it for transcription.
-- Transcribe audio with Gemini, then compare the transcript with the day's habits.
-- Review the transcript, habit status, and an AI-generated daily summary.
+  <!-- REPLACE THIS LINK WITH YOUR ACTUAL SCREENSHOT -->
+  <img src="https://via.placeholder.com/900x500.png?text=++Replace+this+with+a+screenshot+of+your+app++" alt="CasualHealth Dashboard" width="100%" style="border-radius: 12px; margin-top: 20px;" />
+  <br/>
+</div>
 
-## Run Locally
+---
 
-Requirements: Node.js 20.9 or newer and a Gemini API key.
+CasualHealth is a voice-first, AI-powered habit tracker that seamlessly integrates into your daily life. Instead of manually ticking boxes, just talk about your day. Our app listens, analyzes your reflection using Google's Gemini AI, automatically ticks off completed habits, and syncs directly with your Google Calendar.
 
-1. Open the app directory and install its dependencies:
+## ✨ Key Features
 
-	```bash
-	cd frontend
-	npm install
-	```
+- 🎙️ **Voice-First AI Check-ins:** Speak naturally about your day. We use Google Gemini to transcribe and analyze your voice, intelligently detecting which habits you accomplished.
+- 📅 **Google Calendar Integration:** Syncs seamlessly with your Google Calendar. Events are automatically checked off when the time passes or when you mention them in your check-in.
+- 📊 **Progress & Analytics:** A dedicated analytics dashboard using Recharts visualizes your weekly consistency, current streak, and total habits completed over time.
+- 🔊 **AI Daily Review & Playback:** Generates a comprehensive, AI-written summary of your entire day based on all your check-ins, complete with Text-to-Speech (TTS) audio playback.
+- 🔒 **Secure Authentication:** Robust Google OAuth 2.0 integration via NextAuth.
+- 💾 **Persistent Data:** Secure, scalable database architecture powered by Supabase to store your historical habit logs.
+- 📱 **Premium, Responsive UI:** A gorgeous, glassmorphism-inspired dark-mode interface built from the ground up for desktop and mobile, ensuring a premium user experience.
 
-2. Create `frontend/.env.local` and add your server-side key:
+## 🛠️ Tech Stack
 
-	```env
-	GEMINI_API_KEY=your_gemini_api_key
-	```
+- **Frontend:** Next.js 14+ (App Router), React, custom CSS (for precise, premium aesthetic control)
+- **AI Processing:** Google Gemini API (Audio Transcription & Natural Language Analysis)
+- **Backend & Auth:** NextAuth.js (Google Provider), Next.js API Routes
+- **Database:** Supabase (PostgreSQL)
+- **Data Visualization:** Recharts
+- **Icons:** Lucide React
 
-	If you already have `NEXT_PUBLIC_GEMINI_API_KEY` in that file, rename it to `GEMINI_API_KEY`. Restart the dev server after changing environment variables. Do not commit `.env.local` or expose the key with a `NEXT_PUBLIC_` prefix.
+## 🚀 Running Locally
 
-3. Start the development server:
+### Prerequisites
+- Node.js (v20+)
+- Gemini API Key
+- Supabase Project (URL & Service Role Key)
+- Google Cloud Console Project (for OAuth Client ID & Secret)
 
-	```bash
-	npm run dev
-	```
+### Setup Instructions
 
-4. Visit `http://localhost:3000` and allow microphone access. Microphone recording requires localhost or an HTTPS deployment.
+1. **Install dependencies:**
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-## Checks
+2. **Environment Variables:**
+   Create a `.env.local` file in the `frontend` directory and add the following keys:
+   ```env
+   # AI
+   GEMINI_API_KEY=your_gemini_api_key
 
-Run these commands from `frontend/`:
+   # Authentication
+   NEXTAUTH_SECRET=your_nextauth_secret
+   NEXTAUTH_URL=http://localhost:3000
+   GOOGLE_ID=your_google_oauth_client_id
+   GOOGLE_SECRET=your_google_oauth_client_secret
 
-```bash
-npm run lint
-npm run build
-```
+   # Database (Supabase)
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   ```
 
-## Implementation
+3. **Start the Development Server:**
+   ```bash
+   npm run dev
+   ```
 
-- Next.js App Router and React provide the interface and API routes.
-- The browser records audio; `/api/transcribe` sends it to Gemini for transcription.
-- `/api/analyze` receives the transcript and habit list, then returns completed habits and a daily summary.
-- Gemini API calls run on the server. Audio and transcript data are sent to Google Gemini for processing.
+4. **Experience CasualHealth:**
+   Visit `http://localhost:3000`. Please allow microphone access to test the voice check-in feature!
 
-## Prototype Notes
-
-This is a hackathon prototype. Habits, transcripts, and summaries are held in browser memory and are lost when the page is refreshed. There are no accounts, database, or cross-day history yet. The initial habits are sample data, and AI-detected completion should be treated as a suggestion rather than a verified record. The Gemini API routes do not yet have user authentication or rate limiting, so add those controls before exposing a deployment broadly.
-
-## Project Layout
-
-```text
-frontend/
-  app/                 Dashboard, metadata, and API routes
-  components/          Audio recorder and transcript upload UI
-  public/              Static assets
-```
-
-See [frontend/README.md](frontend/README.md) for the app-specific entry point.
+## 🏆 Hackathon Context
+This project was designed, built, and polished over the course of the ASYNC 2026 hackathon. We prioritized a seamless user experience, bridging cutting-edge LLM natural language understanding with everyday wellness routines to create an app people actually *want* to use.
