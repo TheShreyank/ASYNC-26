@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import AudioRecorder from '@/components/AudioRecorder';
 import { Check, Plus, Sparkles, Sun, Moon, Volume2, Square, Bell } from 'lucide-react';
@@ -31,6 +31,69 @@ export default function Dashboard() {
   const [reviewError, setReviewError] = useState('');
   const [isPlayingReview, setIsPlayingReview] = useState(false);
   const [inAppNotifications, setInAppNotifications] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    if (session) {
+      syncCalendar();
+    }
+  }, [session]);
+
+  const syncCalendar = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/calendar/sync');
+      const data = await res.json();
+      if (data.events) {
+        setCalendarEvents(data.events);
+        
+        // Push notification logic for upcoming events
+        const now = new Date();
+        data.events.forEach(event => {
+          const startTime = new Date(event.start);
+          const timeDiffMins = (startTime - now) / 1000 / 60;
+          
+          // If event is starting in the next 30 mins
+          if (timeDiffMins > 0 && timeDiffMins <= 30) {
+            const notifId = Date.now() + Math.random();
+            setInAppNotifications(prev => [...prev, { 
+              id: notifId, 
+              title: 'Upcoming Event', 
+              message: `Your Google Calendar event "${event.summary}" starts in ${Math.round(timeDiffMins)} minutes!`, 
+              fading: false 
+            }]);
+            
+            setTimeout(() => {
+              setInAppNotifications(prev => prev.map(n => n.id === notifId ? { ...n, fading: true } : n));
+            }, 10000);
+            setTimeout(() => {
+              setInAppNotifications(prev => prev.filter(n => n.id !== notifId));
+            }, 12000);
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Failed to sync calendar", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const isEventCompleted = (event) => {
+    // 1. Automatically tick off if the event end time has passed
+    if (new Date() > new Date(event.end)) return true;
+    
+    // 2. Automatically tick off if the user mentioned the event in their voice check-ins today
+    const eventWords = event.summary.toLowerCase().split(' ').filter(w => w.length > 3);
+    const spoken = logs.some(log => {
+      const logText = log.text.toLowerCase();
+      // If the log contains a significant word from the event title, consider it spoken about
+      return eventWords.some(word => logText.includes(word));
+    });
+    
+    return spoken;
+  };
 
   const completedCount = habits.filter((habit) => habit.completed).length;
   const ringOffset = RING_LENGTH * (1 - completedCount / (habits.length || 1));
@@ -282,6 +345,46 @@ export default function Dashboard() {
           </ul>
         </section>
 
+        {/* Calendar Events (New) */}
+        {session && (
+          <section className="card" aria-labelledby="calendar-title" style={{ marginTop: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h2 id="calendar-title">Google Calendar Events</h2>
+              {isSyncing ? (
+                <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Syncing...</span>
+              ) : (
+                <button onClick={syncCalendar} style={{ fontSize: '13px', color: 'var(--leaf)', cursor: 'pointer', background: 'none', border: 'none' }}>
+                  Refresh
+                </button>
+              )}
+            </div>
+            
+            {calendarEvents.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{isSyncing ? 'Loading today\'s events...' : 'No events scheduled for today.'}</p>
+            ) : (
+              <ul className="habits">
+                {calendarEvents.map((event, idx) => {
+                  const completed = isEventCompleted(event);
+                  return (
+                    <li key={event.id || idx} className={`habit${completed ? ' done' : ''}`}>
+                      <span className="tick">
+                        <Check strokeWidth={3} />
+                      </span>
+                      <span className="name" style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span>{event.summary}</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                          {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </span>
+                      <span className="status">{completed ? 'Done' : 'Pending'}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        )}
+
         <div className="col">
           {/* Summary */}
           <section className="card summary" aria-labelledby="h-sum">
@@ -333,6 +436,8 @@ export default function Dashboard() {
               </details>
             )}
           </section>
+
+
 
           {/* Overall Daily Review */}
           <section className="card summary" aria-labelledby="h-review">
