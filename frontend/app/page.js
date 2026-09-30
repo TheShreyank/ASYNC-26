@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import AudioRecorder from '@/components/AudioRecorder';
 import { Check, Plus, Sparkles, Sun, Moon, Volume2, Square, Bell } from 'lucide-react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 
 const RING_RADIUS = 86;
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
@@ -11,6 +12,8 @@ const LEAF_PATH =
   'M88 6C50 8 18 30 14 66c-1 9 1 18 6 26 2-14 8-27 20-38 10-9 22-14 36-16-16 6-28 16-36 32 34 6 58-14 62-48 1-8 0-14-2-16-4-1-8 0-12 0z';
 
 export default function Dashboard() {
+  const { data: session } = useSession();
+
   const [habits, setHabits] = useState([
     { id: 1, name: 'Wake up at 6 a.m.', completed: false },
     { id: 2, name: 'Finish 10k steps', completed: false },
@@ -165,7 +168,28 @@ export default function Dashboard() {
             <span className="b">Health</span>
           </span>
         </div>
-        <div className="top-actions">
+        <div className="top-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {session ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{session.user.name}</span>
+              <button 
+                type="button" 
+                onClick={() => signOut()}
+                style={{ background: 'var(--surface-2)', border: '1px solid var(--leaf)', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', color: 'var(--leaf)', cursor: 'pointer' }}
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <button 
+              type="button"
+              onClick={() => signIn('google')}
+              style={{ background: 'var(--leaf)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path></svg>
+              Connect Calendar
+            </button>
+          )}
           <span className="pill">Beta</span>
           <button
             type="button"
