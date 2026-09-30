@@ -1,5 +1,13 @@
 import { fetchWithRetry } from "@/lib/retry";
 import { GoogleGenAI } from "@google/genai";
+import { supabase } from "@/lib/supabase";
+
+async function saveTranscript(text) {
+  if (supabase) {
+    const { error } = await supabase.from("transcripts").insert({ transcript: text });
+    if (error) console.error("Supabase error:", error);
+  }
+}
 
 const MAX_AUDIO_BYTES = 25 * 1024 * 1024; // Groq allows up to 25 MB
 
@@ -92,6 +100,7 @@ export async function POST(request) {
         );
       }
       console.log("Groq transcription succeeded:", transcript.slice(0, 80));
+      await saveTranscript(transcript);
       return Response.json({ transcript });
     } catch (err) {
       console.warn("Groq transcription failed, falling back to Gemini:", err.message);
@@ -138,6 +147,7 @@ export async function POST(request) {
         { status: 422 }
       );
     }
+    await saveTranscript(transcript);
     return Response.json({ transcript });
   } catch (error) {
     console.error("Gemini transcription fallback also failed:", error);

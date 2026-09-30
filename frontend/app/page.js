@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import AudioRecorder from '@/components/AudioRecorder';
-import { Check, Plus, Sparkles, Sun, Moon, Volume2, Square } from 'lucide-react';
+import { Check, Plus, Sparkles, Sun, Moon, Volume2, Square, Bell } from 'lucide-react';
 
 const RING_RADIUS = 86;
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [reviewError, setReviewError] = useState('');
   const [isPlayingReview, setIsPlayingReview] = useState(false);
+  const [inAppNotifications, setInAppNotifications] = useState([]);
 
   const completedCount = habits.filter((habit) => habit.completed).length;
   const ringOffset = RING_LENGTH * (1 - completedCount / (habits.length || 1));
@@ -75,6 +76,26 @@ export default function Dashboard() {
         completed: completedNames.has(habit.name),
       })));
       setSummary({ text: result.cumulativeSummary });
+
+      if (result.partialHabits && Array.isArray(result.partialHabits) && result.partialHabits.length > 0) {
+        console.log("Partial habits detected for notification:", result.partialHabits);
+        result.partialHabits.forEach(ph => {
+          const notifId = Date.now() + Math.random();
+          setInAppNotifications(prev => [...prev, { id: notifId, title: ph.name, message: ph.message, fading: false }]);
+          
+          // Start fade-out after 10 seconds
+          setTimeout(() => {
+            setInAppNotifications(prev => prev.map(n => n.id === notifId ? { ...n, fading: true } : n));
+          }, 10000);
+
+          // Remove after 12 seconds (2s for fade animation)
+          setTimeout(() => {
+            setInAppNotifications(prev => prev.filter(n => n.id !== notifId));
+          }, 12000);
+        });
+      } else {
+        console.log("No partial habits detected. Full AI result:", result);
+      }
     } catch (err) {
       setAnalysisError(err.message || 'Could not analyze this check-in.');
     } finally {
@@ -362,6 +383,21 @@ export default function Dashboard() {
           </div>
         </div>
       </footer>
+      {/* In-App Toast Notifications */}
+      <div style={{ position: 'fixed', bottom: '24px', right: '24px', display: 'flex', flexDirection: 'column', gap: '12px', zIndex: 9999 }}>
+        {inAppNotifications.map(notification => (
+          <div
+            key={notification.id}
+            className={`toast-notification ${notification.fading ? 'toast-fade-out' : 'toast-slide-in'}`}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <Bell size={24} color="var(--leaf)" />
+              <strong style={{ color: 'var(--text-color)', fontSize: '18px' }}>Keep going! 💪</strong>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '16px', margin: 0, lineHeight: 1.5 }}>{notification.message}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

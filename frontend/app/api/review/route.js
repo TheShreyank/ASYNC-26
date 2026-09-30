@@ -1,4 +1,5 @@
 import { fetchWithRetry } from "@/lib/retry";
+import { supabase } from "@/lib/supabase";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODELS = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"];
@@ -85,6 +86,19 @@ export async function POST(request) {
       }
 
       console.log(`[review] Success with ${model}.`);
+
+      if (supabase) {
+        const completedHabits = habits.filter(h => h.completed).map(h => h.name);
+        const { error } = await supabase.from("daily_overviews").upsert({
+          user_id: "demo_user_123",
+          date: new Date().toISOString().split("T")[0],
+          summary: result.dailyReview,
+          completed_habits: completedHabits
+        }, { onConflict: "user_id, date" });
+        
+        if (error) console.error("Supabase upsert error:", error);
+      }
+
       return Response.json({ dailyReview: result.dailyReview });
 
     } catch (err) {
