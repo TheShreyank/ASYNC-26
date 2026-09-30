@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import AudioRecorder from '@/components/AudioRecorder';
 import { Check, Plus, Sparkles, Sun, Moon, Volume2, Square, Bell } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
@@ -235,6 +236,12 @@ export default function Dashboard() {
           {session ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{session.user.name}</span>
+              <Link 
+                href="/progress"
+                style={{ background: 'var(--leaf)', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', color: 'white', cursor: 'pointer', textDecoration: 'none', fontWeight: 'bold' }}
+              >
+                View Progress
+              </Link>
               <button 
                 type="button" 
                 onClick={() => signOut()}

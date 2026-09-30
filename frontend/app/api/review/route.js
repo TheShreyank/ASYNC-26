@@ -1,5 +1,7 @@
 import { fetchWithRetry } from "@/lib/retry";
 import { supabase } from "@/lib/supabase";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODELS = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"];
@@ -88,9 +90,12 @@ export async function POST(request) {
       console.log(`[review] Success with ${model}.`);
 
       if (supabase) {
+        const session = await getServerSession(authOptions);
+        const userId = session?.user?.id || "demo_user_123";
+        
         const completedHabits = habits.filter(h => h.completed).map(h => h.name);
         const { error } = await supabase.from("daily_overviews").upsert({
-          user_id: "demo_user_123",
+          user_id: userId,
           date: new Date().toISOString().split("T")[0],
           summary: result.dailyReview,
           completed_habits: completedHabits
