@@ -1,14 +1,10 @@
 <div align="center">
   <h1>
-    <img src="frontend/public/casualhealth-minilogo.png" alt="CasualHealth Logo" width="48" style="vertical-align: middle; margin-right: 12px;" />
-    CasualHealth 🌿
+    <img src="frontend/public/casualhealth-minilogo.png" alt="CasualHealth Logo" width="48" style="vertical-align: middle; margin-right: 12px; margin-bottom: 6px;" />
+    <span style="vertical-align: middle;">Casual<font color="#4CB050">Health</font></span>
   </h1>
 
   <p><strong>Live Demo: <a href="https://async-26.vercel.app/">https://async-26.vercel.app/</a></strong></p>
-
-  <!-- REPLACE THIS LINK WITH YOUR ACTUAL SCREENSHOT -->
-  <img src="https://via.placeholder.com/900x500.png?text=++Replace+this+with+a+screenshot+of+your+app++" alt="CasualHealth Dashboard" width="100%" style="border-radius: 12px; margin-top: 20px;" />
-  <br/>
 </div>
 
 ---
