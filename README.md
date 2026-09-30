@@ -1,13 +1,10 @@
 <div align="center">
-  <img src="frontend/public/casualhealth-minilogo.png" alt="CasualHealth Logo" width="120" />
+  <h1>
+    <img src="frontend/public/casualhealth-minilogo.png" alt="CasualHealth Logo" width="48" style="vertical-align: middle; margin-right: 12px;" />
+    CasualHealth 🌿
+  </h1>
 
-  <h1>CasualHealth 🌿</h1>
-  
-  <p><strong>Small habits. Bigger you.</strong></p>
-
-  <p>
-    Built by <strong>JunctionJunkers</strong> for the <strong>ASYNC 2026 Wellness & Lifestyle Track</strong>
-  </p>
+  <p><strong>Live Demo: <a href="https://async-26.vercel.app/">https://async-26.vercel.app/</a></strong></p>
 
   <!-- REPLACE THIS LINK WITH YOUR ACTUAL SCREENSHOT -->
   <img src="https://via.placeholder.com/900x500.png?text=++Replace+this+with+a+screenshot+of+your+app++" alt="CasualHealth Dashboard" width="100%" style="border-radius: 12px; margin-top: 20px;" />
@@ -77,6 +74,3 @@ CasualHealth is a voice-first, AI-powered habit tracker that seamlessly integrat
 
 4. **Experience CasualHealth:**
    Visit `http://localhost:3000`. Please allow microphone access to test the voice check-in feature!
-
-## 🏆 Hackathon Context
-This project was designed, built, and polished over the course of the ASYNC 2026 hackathon. We prioritized a seamless user experience, bridging cutting-edge LLM natural language understanding with everyday wellness routines to create an app people actually *want* to use.
