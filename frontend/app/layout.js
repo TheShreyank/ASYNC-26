@@ -14,6 +14,11 @@ export const metadata = {
     "Track daily habits with voice check-ins, AI-assisted transcription, and reflective summaries.",
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${figtree.variable} h-full antialiased`}>

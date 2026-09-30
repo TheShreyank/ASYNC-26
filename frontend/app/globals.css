@@ -42,7 +42,7 @@ body {
   line-height: 1.5;
 }
 :focus-visible { outline: 3px solid var(--leaf-2); outline-offset: 2px; border-radius: 8px; }
-.wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 20px 20px 40px; }
+.wrap { width: 100%; max-width: 1400px; margin: 0 auto; padding: 20px 40px 60px; }
 
 /* top bar */
 .top { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 20px; }
@@ -176,19 +176,49 @@ body {
 .foot-event { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
 .foot-track { margin: 4px 0 0; font-size: 16px; color: var(--hero-ink-2); }
 
+/* ── Responsive ── */
 @media (max-width: 860px) {
   .grid { grid-template-columns: 1fr; }
   .hero { grid-template-columns: 1fr; padding: 28px 22px; }
-  .ring-wrap { width: 210px; height: 210px; order: -1; }
-  .ring-label b { font-size: 54px; }
-  .ring-wrap circle { stroke-width: 12; }
+  .ring-wrap { width: 180px; height: 180px; order: -1; margin: 0 auto; }
+  .ring-label b { font-size: 44px; }
+  .ring-wrap circle { stroke-width: 11; }
+
+  /* Header: show only logo + hamburger, hide everything else */
+  .dash-nav { display: none; }
+  .top-actions { display: none !important; }
+  .wordmark { font-size: 28px; }
+  .brand img { width: 48px !important; height: 48px !important; }
 }
-@media (max-width: 480px) {
-  .wrap { padding: 14px 14px 32px; }
+
+@media (max-width: 600px) {
+  .wrap { padding: 12px 14px 40px; }
+  .card { padding: 18px 16px; border-radius: 18px; }
+  .card h2 { font-size: 18px; }
+  .hero { border-radius: 20px; padding: 22px 18px; }
+  .hero h1 { font-size: 28px; }
+  .lede { font-size: 15px; margin-bottom: 18px; }
+  .ring-wrap { width: 150px; height: 150px; }
+  .ring-label b { font-size: 36px; }
+  .ring-label span { font-size: 13px; }
+  .btn { font-size: 15px; padding: 13px 18px; }
+
+  /* Habit items — keep text on one line by shrinking font */
+  .habit { padding: 12px 12px; gap: 10px; }
+  .habit .name { font-size: 14px; }
+  .status { font-size: 12px; flex: none; }
+  .tick { width: 22px; height: 22px; }
+  .tick svg { width: 12px; height: 12px; }
+
+  /* Timeline grid: always single column on small screens */
+  .timeline-grid { grid-template-columns: 1fr !important; }
+
+  /* Toast: full width at bottom */
+  .toast-notification { width: calc(100vw - 32px) !important; padding: 16px 18px !important; font-size: 14px !important; }
+
   .pill { display: none; }
-  .card { padding: 20px; }
-  .btn { font-size: 16px; padding: 14px 20px; }
 }
+
 @media (max-width: 700px) {
   .foot-inner { flex-direction: column; gap: 26px; }
   .foot-divider { width: 56px; height: 3px; align-self: center; }
@@ -241,3 +271,74 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ── Dashboard nav links ── */
+.dash-nav { display: flex; align-items: center; gap: 4px; }
+.dash-nav-link {
+  background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: 15px; font-weight: 600;
+  color: var(--ink-2); padding: 8px 14px; border-radius: 10px;
+  transition: background .15s, color .15s; position: relative;
+}
+.dash-nav-link:hover { background: var(--surface-2); color: var(--ink); }
+.dash-nav-link.active { color: var(--leaf); background: var(--tint); }
+.dash-nav-link.active::after {
+  content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+  width: 18px; height: 3px; border-radius: 3px; background: var(--leaf);
+}
+
+/* ── Scrollable sections ── */
+.dash-sections { display: flex; flex-direction: column; gap: 24px; margin-top: 24px; }
+.dash-section { scroll-margin-top: 90px; }
+.dash-section-label {
+  font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-2); margin: 0 0 12px; padding: 0;
+}
+
+/* ── Timeline two-col grid ── */
+.timeline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 680px) { .timeline-grid { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .dash-nav { display: none; } }
+
+/* ── Hamburger button ── */
+.hamburger-btn {
+  display: none;
+  flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+  width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--surface); cursor: pointer; padding: 0; flex: none;
+}
+.hamburger-btn span {
+  display: block; width: 20px; height: 2px; border-radius: 2px;
+  background: var(--ink); transition: transform .25s, opacity .2s;
+}
+.hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger-btn.open span:nth-child(2) { opacity: 0; }
+.hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+@media (max-width: 860px) { .hamburger-btn { display: flex; } }
+
+/* ── Mobile drawer ── */
+.mobile-drawer-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  z-index: 200; opacity: 0; transition: opacity .25s;
+}
+.mobile-drawer-overlay.open { display: block; opacity: 1; }
+.mobile-drawer {
+  position: fixed; top: 0; left: 0; bottom: 0; width: 260px;
+  background: var(--surface); border-right: 1px solid var(--line);
+  padding: 32px 20px; display: flex; flex-direction: column; gap: 8px;
+  z-index: 201; transform: translateX(-100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+  box-shadow: 4px 0 32px rgba(0,0,0,.3);
+}
+.mobile-drawer.open { transform: translateX(0); }
+.mobile-drawer-title {
+  font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-2); padding: 0 8px; margin-bottom: 8px;
+}
+.mobile-drawer-link {
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  font-size: 16px; font-weight: 600; color: var(--ink); padding: 12px 14px;
+  border-radius: 12px; text-align: left; transition: background .15s, color .15s;
+  display: flex; align-items: center; gap: 10px;
+}
+.mobile-drawer-link:hover { background: var(--tint); color: var(--leaf); }
+.mobile-drawer-link.active { background: var(--tint); color: var(--leaf); }
