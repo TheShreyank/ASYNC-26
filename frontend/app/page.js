@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import AudioRecorder from '@/components/AudioRecorder';
-import { Check, Plus, Sparkles, Sun, Moon } from 'lucide-react';
+import { Check, Plus, Sparkles, Sun, Moon, Volume2, Square } from 'lucide-react';
 
 const RING_RADIUS = 86;
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
@@ -23,6 +23,10 @@ export default function Dashboard() {
   const [logs, setLogs] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
+  const [dailyReview, setDailyReview] = useState(null);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [isPlayingReview, setIsPlayingReview] = useState(false);
 
   const completedCount = habits.filter((habit) => habit.completed).length;
   const ringOffset = RING_LENGTH * (1 - completedCount / (habits.length || 1));
@@ -76,6 +80,57 @@ export default function Dashboard() {
     } finally {
       setAnalyzing(false);
     }
+  };
+
+  const handleGenerateReview = async () => {
+    if (logs.length === 0) {
+      setReviewError('Please record at least one check-in before generating a daily review.');
+      return;
+    }
+
+    setIsReviewing(true);
+    setReviewError('');
+    try {
+      const response = await fetch('/api/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          logs: logs.map((l) => ({ 
+            time: l.time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), 
+            text: l.text 
+          })),
+          habits: habits.map((h) => ({ name: h.name, completed: h.completed }))
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Could not generate daily review.');
+      }
+      setDailyReview(result.dailyReview);
+    } catch (err) {
+      setReviewError(err.message || 'Could not generate daily review.');
+    } finally {
+      setIsReviewing(false);
+    }
+  };
+
+  const playReview = () => {
+    if (!dailyReview) return;
+    
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(dailyReview);
+    utterance.rate = 1.5;
+    
+    utterance.onend = () => setIsPlayingReview(false);
+    utterance.onerror = () => setIsPlayingReview(false);
+    
+    setIsPlayingReview(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopReview = () => {
+    window.speechSynthesis.cancel();
+    setIsPlayingReview(false);
   };
 
   return (
@@ -216,16 +271,66 @@ export default function Dashboard() {
             {logs.length === 0 ? (
               <p className="empty">Nothing yet. Your first check-in will appear here.</p>
             ) : (
-              <ul className="logs">
-                {logs.map((log, i) => (
-                  <li key={i}>
-                    <time>
-                      {log.time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                    </time>
-                    &ldquo;{log.text}&rdquo;
-                  </li>
-                ))}
-              </ul>
+              <details className="logs-accordion">
+                <summary className="logs-summary">
+                  View {logs.length} check-in{logs.length > 1 ? 's' : ''}
+                </summary>
+                <ul className="logs">
+                  {logs.map((log, i) => (
+                    <li key={i}>
+                      <time>
+                        {log.time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                      </time>
+                      &ldquo;{log.text}&rdquo;
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </section>
+
+          {/* Overall Daily Review */}
+          <section className="card summary" aria-labelledby="h-review">
+            <h2 id="h-review">
+              <Sparkles aria-hidden="true" /> Overall Daily Review
+            </h2>
+            {reviewError && (
+              <p role="alert" className="err-text">
+                {reviewError}
+              </p>
+            )}
+            {isReviewing ? (
+              <div className="working" role="status">
+                <span className="spin" aria-hidden="true" /> Reviewing your entire day&hellip;
+              </div>
+            ) : dailyReview ? (
+              <div>
+                <p className="text">{dailyReview}</p>
+                <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+                  {!isPlayingReview ? (
+                    <button type="button" className="btn btn-hero" onClick={playReview} style={{ padding: '10px 16px', fontSize: '15px' }}>
+                      <Volume2 size={18} /> Listen to Review
+                    </button>
+                  ) : (
+                    <button type="button" className="btn btn-ghost" onClick={stopReview} style={{ padding: '10px 16px', fontSize: '15px', color: 'var(--coral)', borderColor: 'var(--coral)' }}>
+                      <Square size={18} /> Stop Listening
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="sub" style={{ marginBottom: '16px' }}>
+                  Get a comprehensive summary of your entire day based on all your check-ins.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-hero"
+                  onClick={handleGenerateReview}
+                >
+                  Generate Daily Review
+                </button>
+              </div>
             )}
           </section>
         </div>

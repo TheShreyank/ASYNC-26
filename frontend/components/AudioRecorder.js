@@ -117,6 +117,7 @@ export default function AudioRecorder({ onTranscriptReceived }) {
       });
       const result = await response.json();
       if (!response.ok) {
+        console.error("Backend API Error Details:", result);
         throw new Error(result.error || "Transcription failed.");
       }
 

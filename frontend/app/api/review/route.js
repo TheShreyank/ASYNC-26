@@ -1,0 +1,105 @@
+import { fetchWithRetry } from "@/lib/retry";
+
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODELS = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"];
+
+export async function POST(request) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return Response.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  const { logs, habits = [] } = body;
+  if (!Array.isArray(logs) || !logs.length) {
+    return Response.json(
+      { error: "At least one transcript is required for a review." },
+      { status: 400 }
+    );
+  }
+
+  const groqKey = process.env.GROQ_API_KEY;
+  if (!groqKey) {
+    return Response.json(
+      { error: "Groq API key is not configured on the server." },
+      { status: 503 }
+    );
+  }
+
+  const systemPrompt =
+    'You are a thoughtful and insightful daily reflection assistant. ' +
+    'Return ONLY valid JSON with this exact shape: {"dailyReview": string}. ' +
+    'Keep the review INCREDIBLY concise (max 40 words, 2-3 short sentences). Focus ONLY on the distinct highs and lows. ' +
+    'Do NOT just list out everything that happened. ' +
+    'Crucially, analyze the user\'s completed vs incomplete habits alongside the timeline of their check-ins. ' +
+    'Gently point out exactly where they could have found time in their schedule to knock out missed tasks. Write as a single, highly engaging paragraph.';
+
+  const userMessage =
+    `Target habits for today:\n${JSON.stringify(habits)}\n\n` +
+    `Check-in transcripts (with timestamps):\n` +
+    logs.map((log, i) => `${i + 1}. ${JSON.stringify(log)}`).join("\n");
+
+  for (const model of MODELS) {
+    try {
+      console.log(`[review] Trying model: ${model}`);
+      const res = await fetchWithRetry(
+        GROQ_URL,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${groqKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            response_format: { type: "json_object" },
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userMessage },
+            ],
+            temperature: 0.4,
+            max_tokens: 1024,
+          }),
+        },
+        2
+      );
+
+      const data = await res.json();
+      const raw = data.choices?.[0]?.message?.content;
+      if (!raw) throw new Error("Empty response from Groq.");
+
+      let result;
+      try {
+        result = JSON.parse(raw);
+      } catch {
+        throw new Error(`Groq returned non-JSON: ${raw.slice(0, 120)}`);
+      }
+
+      if (typeof result.dailyReview !== "string") {
+        throw new Error(`Unexpected shape from Groq: ${JSON.stringify(result).slice(0, 120)}`);
+      }
+
+      console.log(`[review] Success with ${model}.`);
+      return Response.json({ dailyReview: result.dailyReview });
+
+    } catch (err) {
+      console.warn(`[review] ${model} failed (status: ${err?.status}):`, err.message);
+      if (err?.status !== 429 && err?.status !== 503) {
+        return Response.json(
+          { error: `Review error: ${err.message}` },
+          { status: err?.status || 502 }
+        );
+      }
+    }
+  }
+
+  return Response.json(
+    { error: "All Groq models are currently rate-limited. Please wait a moment and try again." },
+    { status: 429 }
+  );
+}
