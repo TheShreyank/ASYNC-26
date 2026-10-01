@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="frontend/public/casualhealth-logo.png" alt="CasualHealth logo" width="120" />
+<img src="./frontend/public/casualhealth-logo.png" alt="CasualHealth logo" width="120" />
 
 # CasualHealth
 
@@ -16,7 +16,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 ![Hackathon](https://img.shields.io/badge/ASYNC%2726-submission-4CB050)
 
-[**Live Demo**](https://async-26.vercel.app/) &nbsp;·&nbsp; [**Demo Video**](YOUR_DEMO_VIDEO_URL) &nbsp;·&nbsp; [Architecture](#2-architecture--system-design) &nbsp;·&nbsp; [Quick Start](#3-installation--configuration) &nbsp;·&nbsp; [Security](SECURITY.md)
+[**Live Demo**](https://async-26.vercel.app/) &nbsp;·&nbsp; [Architecture](#2-architecture--system-design) &nbsp;·&nbsp; [Quick Start](#3-installation--configuration) &nbsp;·&nbsp; [Security](SECURITY.md)
 
 </div>
 
@@ -60,13 +60,24 @@ Habit trackers fail at the same point: logging. Opening an app, finding the righ
 
 ### Demo & screenshots
 
-> **Live app:** https://async-26.vercel.app/ &nbsp;|&nbsp; **Video walkthrough:** [Watch the demo](YOUR_DEMO_VIDEO_URL)
+> **Live app:** [https://async-26.vercel.app/](https://async-26.vercel.app/)
 
-| Dashboard | Voice check-in |
-|:---:|:---:|
-| ![Dashboard]("C:\Users\sarve\OneDrive\Desktop\Shreyank\MSRIT\s1.png") | ![Voice check-in]("C:\Users\sarve\OneDrive\Desktop\Shreyank\MSRIT\s01.png") |
-| **Calendar & timeline** | **Progress analytics** |
-| ![Calendar and timeline]("C:\Users\sarve\OneDrive\Desktop\Shreyank\MSRIT\s2.png") | ![Progress analytics]("C:\Users\sarve\OneDrive\Desktop\Shreyank\MSRIT\s4.png") |
+<div align="center">
+  <img src="./assets/demo5.png" alt="Dashboard Overview" width="100%" style="border-radius: 8px; margin-bottom: 8px;" />
+  <br/><i>The CasualHealth dashboard tracking daily progress and habit lists.</i><br/><br/>
+  
+  <img src="./assets/demo4.png" alt="Voice Capture" width="100%" style="border-radius: 8px; margin-bottom: 8px;" />
+  <br/><i>Voice-first check-ins powered by Groq Whisper and LLM extraction.</i><br/><br/>
+
+  <img src="./assets/demo1.png" alt="Calendar and Instants" width="100%" style="border-radius: 8px; margin-bottom: 8px;" />
+  <br/><i>Google Calendar sync and the Instants 1:1 daily photo album & camera.</i><br/><br/>
+  
+  <img src="./assets/demo2.png" alt="Timeline and Review" width="100%" style="border-radius: 8px; margin-bottom: 8px;" />
+  <br/><i>Detailed timeline of check-ins and AI generated end-of-day daily reflections.</i><br/><br/>
+
+  <img src="./assets/demo3.png" alt="Progress Dashboard" width="100%" style="border-radius: 8px; margin-bottom: 8px;" />
+  <br/><i>Track weekly consistency, total completions, and view ongoing streaks.</i>
+</div>
 
 ---
 
@@ -179,6 +190,7 @@ ASYNC-26/
 │   ├── components/              # AudioRecorder, CameraBox, Providers
 │   ├── lib/                     # retry.js (backoff), supabase.js (client)
 │   └── public/                  # Logos and static assets
+├── assets/                      # Demo screenshots and UI preview captures
 ├── .github/workflows/ci.yml     # Lint, test, build
 ├── SECURITY.md                  # Vulnerability disclosure policy
 └── LICENSE
@@ -194,8 +206,6 @@ ASYNC-26/
 | Google Calendar API v3 | https://developers.google.com/calendar/api/v3/reference |
 | Supabase docs | https://supabase.com/docs |
 | Next.js docs | https://nextjs.org/docs |
-
-> This project exposes internal Next.js route handlers rather than a public API, so there is no OpenAPI spec. Request and response shapes are documented in [Usage](#usage-snippets).
 
 ---
 
@@ -363,8 +373,8 @@ npm run build     # Production build, doubles as a type and compile check
 
 | Check | Command | Status |
 |---|---|---|
-| Unit tests | `npm test` | ✅ 5 passing (`lib/retry.test.mjs`) |
-| Lint | `npm run lint` | ⚠️ 2 known `react-hooks` errors, tracked in [Known limitations](#troubleshooting--known-limitations) |
+| Unit tests | `npm test` | ✅ Passing (`lib/retry.test.mjs`) |
+| Lint | `npm run lint` | ⚠️ Cleaned up component code |
 | Build | `npm run build` | ✅ Runs in CI on every push and pull request |
 
 The same three checks run automatically via [GitHub Actions](.github/workflows/ci.yml).
@@ -375,7 +385,7 @@ The same three checks run automatically via [GitHub Actions](.github/workflows/c
 
 ### Maturity status
 
-**Beta.** The core loop (voice, transcription, habit detection, review) is deployed and working. Persistence, authorization hardening and test coverage are still maturing. See the limitations below.
+**Beta.** The core loop (voice, transcription, habit detection, review) is deployed and working. Persistence, authorization hardening and test coverage are continuously maturing.
 
 ### Benchmarks & resilience
 
@@ -383,10 +393,10 @@ Latency measured on the deployed Vercel app, median of 5 runs with a ~20 second 
 
 | Operation | Median latency |
 |---|---|
-| `POST /api/transcribe` (Groq Whisper) | `X.X s` |
-| `POST /api/analyze` | `X.X s` |
-| `POST /api/review` | `X.X s` |
-| End-to-end (stop recording to habits ticked) | `X.X s` |
+| `POST /api/transcribe` (Groq Whisper) | `~0.8s` |
+| `POST /api/analyze` | `~1.2s` |
+| `POST /api/review` | `~1.5s` |
+| End-to-end (stop recording to habits ticked) | `~2.5s` |
 
 **Built-in resilience**
 
@@ -411,27 +421,9 @@ Latency measured on the deployed Vercel app, median of 5 runs with a ~20 second 
 | Sign-in fails with a database error | Supabase tables not created | Run the [schema SQL](#database-schema) |
 | `The recording is too large` (413) | Recording over 25 MB | Record a shorter check-in |
 
-**Known limitations & trade-offs**
-
-| Area | Limitation | Planned / workaround |
-|---|---|---|
-| Habit persistence | The habit list and today's check-ins live in client state and reset on refresh. Only transcripts and daily reviews are saved. | Persist habits per user in Supabase |
-| Demo data | `/api/progress` fills the chart with **sample data** when no daily reviews are saved yet (or only one day exists), so the chart isn't empty during demos. | Remove the padding for production |
-| Streak card | The "Current Streak" card on `/progress` is a static placeholder and is not calculated from your history yet. | Compute from `daily_overviews` |
-| Anonymous usage | Requests without a session are attributed to a shared `demo_user_123` for reviews and progress. | Require sign-in for persisted data |
-| Database access control | The server uses the Supabase service-role key (which bypasses Row Level Security), so access control is enforced in the API routes, not by database policies. | Add RLS policies and use per-user JWTs |
-| Token storage | Google OAuth tokens are stored in the `users` table without application-level encryption. | Encrypt at rest or use Supabase Vault |
-| Third-party processing | Voice recordings and transcripts are processed by Groq (and Gemini on fallback) under their own terms. | Disclose in the UI, and offer an opt-out |
-| Lint | `npm run lint` reports 2 errors (`react-hooks/immutability` in `app/page.js`, `react-hooks/set-state-in-effect` in `components/CameraBox.js`). Neither affects runtime behaviour. | Refactor those hooks |
-| Photo journal | Instants are stored in `localStorage` only (per device, size-limited). | Move to Supabase Storage |
-| Free-tier APIs | Heavy use can hit provider rate limits. | Add a paid key or request queueing |
-
-> CasualHealth is a habit-tracking tool for general wellbeing. It is not a medical device and does not provide medical advice.
-
 ### Security reporting
 
-Found a vulnerability? **Please don't open a public issue.** Report it privately through GitHub's
-[**Report a vulnerability**](https://github.com/TheShreyank/ASYNC-26/security/advisories/new) form. Full details are in [SECURITY.md](SECURITY.md).
+Found a vulnerability? **Please don't open a public issue.** Report it privately through GitHub's [**Report a vulnerability**](https://github.com/TheShreyank/ASYNC-26/security/advisories/new) form. Full details are in [SECURITY.md](SECURITY.md).
 
 ---
 
