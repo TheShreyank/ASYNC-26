@@ -35,12 +35,13 @@ export async function POST(request) {
   }
 
   const systemPrompt =
-    'You are a thoughtful and insightful daily reflection assistant. ' +
+    'You are a highly motivating, thoughtful, and insightful daily reflection assistant. ' +
     'Return ONLY valid JSON with this exact shape: {"dailyReview": string}. ' +
-    'Keep the review INCREDIBLY concise (max 40 words, 2-3 short sentences). Focus ONLY on the distinct highs and lows. ' +
+    'Keep the review concise but detailed enough to be meaningful (max 80 words, 4-5 sentences). Focus on celebrating their wins to keep them motivated! ' +
     'Do NOT just list out everything that happened. ' +
     'Crucially, analyze the user\'s completed vs incomplete habits alongside the timeline of their check-ins. ' +
-    'Gently point out exactly where they could have found time in their schedule to knock out missed tasks. Write as a single, highly engaging paragraph.';
+    'Kindly but directly point out exactly where they missed out and where they had gaps in their schedule to knock out missed tasks. ' +
+    'End on an encouraging and uplifting note. Write as a single, highly engaging paragraph.';
 
   const userMessage =
     `Target habits for today:\n${JSON.stringify(habits)}\n\n` +
