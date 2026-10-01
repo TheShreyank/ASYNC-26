@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AudioRecorder from '@/components/AudioRecorder';
 import { Check, Plus, Sparkles, Sun, Moon, Volume2, Square, Bell } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import confetti from 'canvas-confetti';
 
 const RING_RADIUS = 86;
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
@@ -114,6 +115,29 @@ export default function Dashboard() {
 
   const completedCount = habits.filter((habit) => habit.completed).length;
   const ringOffset = RING_LENGTH * (1 - completedCount / (habits.length || 1));
+
+  useEffect(() => {
+    if (habits.length > 0 && completedCount === habits.length) {
+      let leafShape;
+      try {
+        leafShape = confetti.shapeFromPath({ path: LEAF_PATH });
+      } catch (e) {
+        // Fallback if shapeFromPath is not supported
+      }
+      
+      confetti({
+        particleCount: 120,
+        spread: 120,
+        origin: { y: 0.5 },
+        colors: ['#4caf50', '#81c784', '#388e3c', '#2e7d32', '#1b5e20', '#aed581'],
+        shapes: leafShape ? [leafShape] : ['circle'],
+        scalar: leafShape ? 3 : 1.2,
+        ticks: 300,
+        gravity: 0.8,
+        drift: 0.2,
+      });
+    }
+  }, [completedCount, habits.length]);
 
   const toggleTheme = () => {
     const root = document.documentElement;

@@ -70,3 +70,9 @@ CasualHealth is a voice-first, AI-powered habit tracker that seamlessly integrat
 
 4. **Experience CasualHealth:**
    Visit `http://localhost:3000`. Please allow microphone access to test the voice check-in feature!
+
+## 🛡️ Open Source & Security
+
+CasualHealth leverages battle-tested, open-source software (Node.js, React, Recharts) to ensure robust performance. 
+- **Security:** We use enterprise-grade Google OAuth 2.0 (via NextAuth) so passwords are never stored. 
+- **Data Safety:** All voice transcripts and habit logs are securely transmitted to Google Gemini and stored securely in Supabase using Row Level Security (RLS) policies. Your data is private and never exposed.
