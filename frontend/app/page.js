@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import AudioRecorder from '@/components/AudioRecorder';
+import CameraBox from '@/components/CameraBox';
 import { Check, Plus, Sparkles, Sun, Moon, Volume2, Square, Bell } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import confetti from 'canvas-confetti';
@@ -46,7 +47,7 @@ export default function Dashboard() {
 
   // Track which section is in view for the nav highlight
   useEffect(() => {
-    const sections = ['habits', 'calendar', 'timeline', 'review'];
+    const sections = ['habits', 'calendar', 'instants', 'timeline', 'review'];
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -246,6 +247,7 @@ export default function Dashboard() {
   const navLinks = [
     { id: 'habits', label: 'Habits' },
     { id: 'calendar', label: 'Calendar' },
+    { id: 'instants', label: 'Instants' },
     { id: 'timeline', label: 'Timeline' },
     { id: 'review', label: 'Review' },
   ];
@@ -462,6 +464,8 @@ export default function Dashboard() {
             )}
           </section>
         )}
+
+        <CameraBox />
 
         {/* Section 3 + 4: Timeline — left col (Your day so far + Review), right col (Check-ins) */}
         <section id="timeline" className="dash-section" aria-labelledby="timeline-title">
