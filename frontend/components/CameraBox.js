@@ -17,7 +17,6 @@ export default function CameraBox() {
   const [isCopied, setIsCopied] = useState(false);
   const hasAttemptedAutoStart = useRef(false);
 
-  // Load photos from local storage on mount
   useEffect(() => {
     const saved = localStorage.getItem('casualhealth_instants');
     if (saved) {
@@ -29,12 +28,10 @@ export default function CameraBox() {
     }
   }, []);
 
-  // Save to local storage whenever photos change
   useEffect(() => {
     localStorage.setItem('casualhealth_instants', JSON.stringify(photos));
   }, [photos]);
 
-  // Slideshow timer — 15 seconds per photo
   useEffect(() => {
     if (photos.length <= 1) return;
     const timer = setInterval(() => {
@@ -73,8 +70,7 @@ export default function CameraBox() {
       setFacingMode(mode);
       setIsCameraActive(true);
     } catch (err) {
-      setError(err.message || 'Could not access camera. Please allow permissions.');
-      console.error('Camera error:', err);
+      setError(err.message || 'Could not access camera.');
       setIsCameraActive(false);
     }
   }, [facingMode, stopCamera]);
@@ -84,7 +80,6 @@ export default function CameraBox() {
     startCamera(nextMode);
   };
 
-  // Auto-start camera on mount
   useEffect(() => {
     if (!hasAttemptedAutoStart.current && typeof window !== 'undefined') {
       hasAttemptedAutoStart.current = true;
@@ -99,7 +94,6 @@ export default function CameraBox() {
     };
   }, [startCamera, stopCamera]);
 
-  // Mini confetti burst around the shutter button
   const fireShutterConfetti = () => {
     if (!shutterRef.current) return;
     const rect = shutterRef.current.getBoundingClientRect();
@@ -144,7 +138,6 @@ export default function CameraBox() {
     setPhotos((prev) => [{ id: Date.now(), url: dataUrl, time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }, ...prev]);
     setSlideshowIndex(0);
 
-    // Fire mini confetti
     fireShutterConfetti();
   };
 
@@ -212,13 +205,12 @@ export default function CameraBox() {
           setIsCopied(true);
           setTimeout(() => setIsCopied(false), 3000);
         } catch (err) {
-          console.error('Clipboard copy failed:', err);
-          alert('Could not copy to clipboard automatically. Your browser might require you to grant permissions.');
+          alert('Could not copy to clipboard automatically. Grant permissions.');
         }
       }, 'image/png');
       
     } catch (err) {
-      console.error('Error generating collage:', err);
+      console.error(err);
     }
   };
 
@@ -238,7 +230,6 @@ export default function CameraBox() {
       
       {error && <p role="alert" className="err-text" style={{ fontSize: '13px', marginBottom: '10px' }}>{error}</p>}
       
-      {/* Side-by-side layout */}
       <div style={{ 
         display: 'flex', 
         flexWrap: 'wrap',
@@ -248,11 +239,8 @@ export default function CameraBox() {
         margin: '0 auto'
       }}>
         
-        {/* Left: Camera Viewport */}
         <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '320px' }}>
-          {/* We add a spacer to match the right column's header height so they align perfectly */}
           <div style={{ height: '23px', marginBottom: '10px' }}></div>
-          
           <div style={{ 
             position: 'relative', 
             width: '100%', 
@@ -266,111 +254,106 @@ export default function CameraBox() {
             justifyContent: 'center',
             boxShadow: '0 4px 16px rgba(0,0,0,0.05)'
           }}>
-          
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            muted 
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover', 
-              transform: facingMode === 'user' ? 'scaleX(-1)' : 'none',
-              display: isCameraActive ? 'block' : 'none'
-            }} 
-          />
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover', 
+                transform: facingMode === 'user' ? 'scaleX(-1)' : 'none',
+                display: isCameraActive ? 'block' : 'none'
+              }} 
+            />
 
-          {isCameraActive ? (
-            <>
-              {/* Shutter Button */}
-              <button 
-                ref={shutterRef}
-                onClick={capturePhoto}
-                style={{
-                  position: 'absolute',
-                  bottom: '14px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '52px',
-                  height: '52px',
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.25)',
-                  border: '3px solid white',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                  transition: 'transform 0.1s ease'
-                }}
-                aria-label="Take photo"
-              >
-                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'white' }} />
-              </button>
-              
-              {/* Switch Camera Button */}
-              <button
-                onClick={toggleCamera}
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  left: '10px',
-                  background: 'rgba(0,0,0,0.45)',
-                  backdropFilter: 'blur(4px)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-                aria-label="Switch camera"
-                title="Switch camera"
-              >
-                <RefreshCcw size={14} />
-              </button>
+            {isCameraActive ? (
+              <>
+                <button 
+                  ref={shutterRef}
+                  onClick={capturePhoto}
+                  style={{
+                    position: 'absolute',
+                    bottom: '14px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    border: '3px solid white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                    transition: 'transform 0.1s ease'
+                  }}
+                  aria-label="Take photo"
+                >
+                  <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'white' }} />
+                </button>
+                
+                <button
+                  onClick={toggleCamera}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    left: '10px',
+                    background: 'rgba(0,0,0,0.45)',
+                    backdropFilter: 'blur(4px)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                  aria-label="Switch camera"
+                  title="Switch camera"
+                >
+                  <RefreshCcw size={14} />
+                </button>
 
-              {/* Close Camera Button */}
-              <button
-                onClick={stopCamera}
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  right: '10px',
-                  background: 'rgba(0,0,0,0.45)',
-                  backdropFilter: 'blur(4px)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-                aria-label="Close camera"
-                title="Close camera"
-              >
-                <X size={14} />
-              </button>
-            </>
-          ) : (
-            <div style={{ textAlign: 'center', color: 'var(--ink-2)' }}>
-              <Camera size={28} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
-              <button className="btn btn-hero" onClick={() => startCamera()} style={{ padding: '8px 16px', fontSize: '13px' }}>
-                Open Camera
-              </button>
-            </div>
-          )}
-        </div>
+                <button
+                  onClick={stopCamera}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: 'rgba(0,0,0,0.45)',
+                    backdropFilter: 'blur(4px)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                  aria-label="Close camera"
+                  title="Close camera"
+                >
+                  <X size={14} />
+                </button>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', color: 'var(--ink-2)' }}>
+                <Camera size={28} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
+                <button className="btn btn-hero" onClick={() => startCamera()} style={{ padding: '8px 16px', fontSize: '13px' }}>
+                  Open Camera
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right: Album Slideshow */}
         <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '320px' }}>
           <div style={{ 
             fontSize: '13px', 
@@ -399,7 +382,6 @@ export default function CameraBox() {
           
           {photos.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
-              {/* Slideshow */}
               <div style={{ 
                 width: '100%', 
                 aspectRatio: '1/1', 
@@ -436,7 +418,6 @@ export default function CameraBox() {
                 </div>
               </div>
               
-              {/* Slideshow dots */}
               {photos.length > 1 && (
                 <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', flexWrap: 'wrap' }}>
                   {photos.map((_, idx) => (
@@ -455,7 +436,6 @@ export default function CameraBox() {
                 </div>
               )}
 
-              {/* Collage Button */}
               <button 
                 onClick={copyCollageToClipboard} 
                 className="btn btn-hero" 
@@ -491,7 +471,6 @@ export default function CameraBox() {
         </div>
       </div>
 
-      {/* Hidden Canvas for processing */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
     </section>
   );
