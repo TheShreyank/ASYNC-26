@@ -64,9 +64,9 @@ Habit trackers fail at the same point: logging. Opening an app, finding the righ
 
 | Dashboard | Voice check-in |
 |:---:|:---:|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Voice check-in](docs/screenshots/voice-checkin.png) |
+| ![Dashboard]("C:\Users\sarve\OneDrive\Desktop\Shreyank\MSRIT\s1.png") | ![Voice check-in]("C:\Users\sarve\OneDrive\Desktop\Shreyank\MSRIT\s01.png") |
 | **Calendar & timeline** | **Progress analytics** |
-| ![Calendar and timeline](docs/screenshots/calendar-timeline.png) | ![Progress analytics](docs/screenshots/progress.png) |
+| ![Calendar and timeline]("C:\Users\sarve\OneDrive\Desktop\Shreyank\MSRIT\s2.png") | ![Progress analytics]("C:\Users\sarve\OneDrive\Desktop\Shreyank\MSRIT\s4.png") |
 
 ---
 
